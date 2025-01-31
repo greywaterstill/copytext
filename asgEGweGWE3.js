@@ -1,69 +1,67 @@
 (() => {
     try {
-        let uiContainer = document.createElement("div");
-        uiContainer.style.position = "fixed";
-        uiContainer.style.top = "10px";
-        uiContainer.style.right = "10px";
-        uiContainer.style.padding = "10px";
-        uiContainer.style.backgroundColor = "white";
-        uiContainer.style.border = "1px solid black";
-        uiContainer.style.cursor = "move";
-        uiContainer.style.zIndex = "1000";
-        uiContainer.innerHTML = '<button id="copyTextButton">Copy Text</button>';
-        document.body.appendChild(uiContainer);
+        // Function to locate the target element, handling iframes if necessary
+        const findElement = () => {
+            let container = document.querySelector(".question-container");
 
-        uiContainer.onmousedown = function(event) {
-            let shiftX = event.clientX - uiContainer.getBoundingClientRect().left;
-            let shiftY = event.clientY - uiContainer.getBoundingClientRect().top;
-
-            function moveAt(pageX, pageY) {
-                uiContainer.style.left = pageX - shiftX + 'px';
-                uiContainer.style.top = pageY - shiftY + 'px';
-            }
-
-            function onMouseMove(event) {
-                moveAt(event.pageX, event.pageY);
-            }
-
-            document.addEventListener('mousemove', onMouseMove);
-
-            uiContainer.onmouseup = function() {
-                document.removeEventListener('mousemove', onMouseMove);
-                uiContainer.onmouseup = null;
-            };
-        };
-
-        uiContainer.ondragstart = function() {
-            return false;
-        };
-
-
-        document.addEventListener("DOMContentLoaded", function() {
-            let container = document.querySelector(".Assessment_Main_Body_Content_Question");
-            
+            // Check inside an iframe if not found
             if (!container) {
-                console.error("Element not found");
-                return;
+                let iframe = document.querySelector("iframe");
+                let iframeDoc = iframe ? iframe.contentDocument || iframe.contentWindow.document : null;
+                container = iframeDoc?.querySelector(".question-container");
             }
-        
-            function copyText() {
-                let textContent = Array.from(container.children)
-                    .map(child => child.innerText.trim())
-                    .filter((text, index, self) => text && self.indexOf(text) === index)
-                    .join("\n\n");
-                
-                let tempTextArea = document.createElement("textarea");
-                tempTextArea.value = textContent;
-                document.body.appendChild(tempTextArea);
-                tempTextArea.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempTextArea);
-                
-                console.log("Copied to clipboard:", textContent);
+
+            return container;
+        };
+
+        // Function to extract all text within the target element
+        const extractText = (element) => {
+            return element ? element.innerText.trim() : "";
+        };
+
+        // Function to copy extracted text to the clipboard
+        const copyToClipboard = (text) => {
+            let tempTextArea = document.createElement("textarea");
+            tempTextArea.value = text;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempTextArea);
+            console.log("Copied to clipboard:", text);
+        };
+
+        // Observer to detect dynamic content loading
+        let observer = new MutationObserver(() => {
+            let container = findElement();
+            if (container) {
+                observer.disconnect(); // Stop observing once found
+                let textContent = extractText(container);
+                if (textContent) {
+                    copyToClipboard(textContent);
+                } else {
+                    console.warn("Element found but contains no text.");
+                }
             }
-            
-            document.getElementById("copyTextButton").addEventListener("click", copyText);
         });
+
+        // Start observing the body for changes
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Fallback: Check after 3 seconds if still not found
+        setTimeout(() => {
+            let container = findElement();
+            if (container) {
+                observer.disconnect();
+                let textContent = extractText(container);
+                if (textContent) {
+                    copyToClipboard(textContent);
+                } else {
+                    console.warn("Element found but contains no text.");
+                }
+            } else {
+                console.error("Element not found after timeout.");
+            }
+        }, 3000);
     } catch (error) {
         console.error("An error occurred:", error);
     }
