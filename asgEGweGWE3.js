@@ -38,7 +38,20 @@
             return container;
         };
 
-        const extractText = (element) => element ? element.innerText.trim().replace(/\./g, '.\n') : "";
+        const extractText = (element) => {
+            if (!element) return "";
+
+            let textContent = "";
+            let questionText = element.querySelector(".Practice_Question_Body")?.innerText.trim();
+            if (questionText) textContent += questionText + "\n";
+
+            let choices = element.querySelectorAll(".answer-choice-label");
+            choices.forEach((choice, index) => {
+                textContent += `${String.fromCharCode(65 + index)}. ${choice.innerText.trim()}\n`;
+            });
+
+            return textContent.trim();
+        };
 
         const copyToClipboard = (text) => {
             let tempTextArea = document.createElement("textarea");
@@ -90,6 +103,13 @@
                 console.warn("No text to remove.");
             }
         });
+
+        // Dynamically detect changes in the DOM to adjust to new content
+        const observer = new MutationObserver(() => {
+            console.log("DOM changed, rechecking elements...");
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
     } catch (error) {
         console.error("An error occurred:", error);
     }
