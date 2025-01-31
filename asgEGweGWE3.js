@@ -1,6 +1,5 @@
 (() => {
     try {
-        // Create a draggable UI element
         let uiContainer = document.createElement("div");
         uiContainer.style.position = "fixed";
         uiContainer.style.top = "10px";
@@ -13,7 +12,6 @@
         uiContainer.innerHTML = '<button id="copyTextButton">Copy Text</button>';
         document.body.appendChild(uiContainer);
 
-        // Make the UI draggable
         uiContainer.onmousedown = function(event) {
             let shiftX = event.clientX - uiContainer.getBoundingClientRect().left;
             let shiftY = event.clientY - uiContainer.getBoundingClientRect().top;
@@ -39,7 +37,7 @@
             return false;
         };
 
-        // Wait for the DOM to fully load before selecting elements
+
         document.addEventListener("DOMContentLoaded", function() {
             let container = document.querySelector(".Assessment_Main_Body_Content_Question");
             
@@ -47,8 +45,7 @@
                 console.error("Element not found");
                 return;
             }
-            
-            // Function to copy text content
+        
             function copyText() {
                 let textContent = Array.from(container.children)
                     .map(child => child.innerText.trim())
